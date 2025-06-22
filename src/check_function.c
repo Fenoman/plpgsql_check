@@ -33,6 +33,7 @@
 
 static HTAB *plpgsql_check_HashTable = NULL;
 
+bool		plpgsql_check_disable_dynamic_sql_check = true;
 bool		plpgsql_check_other_warnings = false;
 bool		plpgsql_check_extra_warnings = false;
 bool		plpgsql_check_performance_warnings = false;
