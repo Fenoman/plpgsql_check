@@ -218,6 +218,14 @@ _PG_init(void)
 	AssertVariableIsOfType(&plpgsql_ns_lookup, plpgsql_check__ns_lookup_t);
 	plpgsql_check__ns_lookup_p = (plpgsql_check__ns_lookup_t)
 		LOAD_EXTERNAL_FUNCTION("$libdir/plpgsql", "plpgsql_ns_lookup");
+	
+	DefineCustomBoolVariable("plpgsql_check.disable_dynamic_sql_check",
+                          	 "When true, plpgsql_check will skip analysis of dynamic SQL statements (EXECUTE).",
+                          	 NULL,
+                          	 &plpgsql_check_disable_dynamic_sql_check,
+                          	 true,
+                          	 PGC_USERSET, 0,
+                          	 NULL, NULL, NULL);
 
 	DefineCustomBoolVariable("plpgsql_check.regress_test_mode",
 							 "reduces volatile output",
