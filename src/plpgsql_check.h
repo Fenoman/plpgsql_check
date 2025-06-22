@@ -278,6 +278,7 @@ extern void plpgsql_check_mark_as_checked(PLpgSQL_function *func);
 extern void plpgsql_check_setup_fcinfo(plpgsql_check_info *cinfo, FmgrInfo *flinfo, FunctionCallInfo fcinfo,
 									   ReturnSetInfo *rsinfo, TriggerData *trigdata, EventTriggerData *etrigdata, Trigger *tg_trigger, bool *fake_rtd);
 
+extern bool plpgsql_check_disable_dynamic_sql_check;
 extern bool plpgsql_check_other_warnings;
 extern bool plpgsql_check_extra_warnings;
 extern bool plpgsql_check_performance_warnings;
