@@ -1802,7 +1802,36 @@ check_dynamic_sql(PLpgSQL_checkstate *cstate,
 
 	volatile bool raise_unknown_rec_warning = false;
 	volatile bool known_type_of_dynexpr = false;
-
+	
+	
+	/*
+	 * Skip dynamic SQL checking if configured
+	 */
+	if (plpgsql_check_disable_dynamic_sql_check)
+	{
+		/* We still need to check the basic expressions for syntax errors */
+		plpgsql_check_expr(cstate, query);
+		foreach(l, params)
+		{
+			plpgsql_check_expr(cstate, (PLpgSQL_expr *) lfirst(l));
+		}
+		
+		/* Mark that we found execute statement for volatility checks */
+		cstate->has_execute_stmt = true;
+		
+		/* Mark that we found dynamic query for return checks if needed */
+		if (stmt->cmd_type == PLPGSQL_STMT_RETURN_QUERY)
+			cstate->found_return_dyn_query = true;
+			
+		/* Handle target variable if INTO clause is used */
+		if (into && target)
+		{
+			check_variable(cstate, target);
+		}
+		
+		return;
+	}
+	
 	/*
 	 * possible checks:
 	 *
