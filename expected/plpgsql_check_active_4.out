@@ -419,9 +419,9 @@ select f1();
 (1 row)
 
 select * from plpgsql_check_function_tb('f1()');
- functionid | lineno | statement | sqlstate |           message           | detail | hint | level | position | query |       context        
-------------+--------+-----------+----------+-----------------------------+--------+------+-------+----------+-------+----------------------
- f1         |      6 | RAISE     | 42703    | record "r" has no field "c" |        |      | error |          |       | SQL expression "r.c"
+ functionid | lineno | statement | sqlstate |           message           | detail | hint | level | position | query |          context          
+------------+--------+-----------+----------+-----------------------------+--------+------+-------+----------+-------+---------------------------
+ f1         |      6 | RAISE     | 42703    | record "r" has no field "c" |        |      | error |          |       | PL/pgSQL expression "r.c"
 (1 row)
 
 select f1();
@@ -453,9 +453,9 @@ select f1();
 (1 row)
 
 select * from plpgsql_check_function_tb('f1()');
- functionid | lineno | statement | sqlstate |           message           | detail | hint | level | position | query |       context        
-------------+--------+-----------+----------+-----------------------------+--------+------+-------+----------+-------+----------------------
- f1         |      6 | RAISE     | 42703    | record "r" has no field "c" |        |      | error |          |       | SQL expression "r.c"
+ functionid | lineno | statement | sqlstate |           message           | detail | hint | level | position | query |          context          
+------------+--------+-----------+----------+-----------------------------+--------+------+-------+----------+-------+---------------------------
+ f1         |      6 | RAISE     | 42703    | record "r" has no field "c" |        |      | error |          |       | PL/pgSQL expression "r.c"
 (1 row)
 
 select f1();
@@ -594,9 +594,9 @@ create trigger t1_f1 before insert on t1
   execute procedure f1_trg();
 insert into t1 values(6,30);
 select * from plpgsql_check_function_tb('f1_trg()','t1');
- functionid | lineno | statement | sqlstate |            message            | detail | hint | level | position | query |        context         
-------------+--------+-----------+----------+-------------------------------+--------+------+-------+----------+-------+------------------------
- f1_trg     |      5 | RAISE     | 42703    | record "new" has no field "c" |        |      | error |          |       | SQL expression "new.c"
+ functionid | lineno | statement | sqlstate |            message            | detail | hint | level | position | query |           context           
+------------+--------+-----------+----------+-------------------------------+--------+------+-------+----------+-------+-----------------------------
+ f1_trg     |      5 | RAISE     | 42703    | record "new" has no field "c" |        |      | error |          |       | PL/pgSQL expression "new.c"
 (1 row)
 
 insert into t1 values(6,30);
@@ -813,7 +813,7 @@ select * from plpgsql_check_function('f1()');
              plpgsql_check_function              
 -------------------------------------------------
  error:42703:6:RAISE:record "r" has no field "c"
- Context: SQL expression "r.c"
+ Context: PL/pgSQL expression "r.c"
 (2 rows)
 
 select f1();
@@ -848,7 +848,7 @@ select * from plpgsql_check_function('f1()');
              plpgsql_check_function              
 -------------------------------------------------
  error:42703:6:RAISE:record "r" has no field "c"
- Context: SQL expression "r.c"
+ Context: PL/pgSQL expression "r.c"
 (2 rows)
 
 select f1();
@@ -1000,7 +1000,7 @@ select * from plpgsql_check_function('f1_trg()','t1');
               plpgsql_check_function               
 ---------------------------------------------------
  error:42703:5:RAISE:record "new" has no field "c"
- Context: SQL expression "new.c"
+ Context: PL/pgSQL expression "new.c"
 (2 rows)
 
 insert into t1 values(6,30);
@@ -1319,10 +1319,10 @@ begin
 end;
 $$ language plpgsql;
 select * from plpgsql_check_function('f1()', performance_warnings := true);
-                              plpgsql_check_function                               
------------------------------------------------------------------------------------
+                                     plpgsql_check_function                                      
+-------------------------------------------------------------------------------------------------
  error:42804:3:RETURN QUERY:structure of query does not match function result type
- Detail: Returned type integer does not match expected type numeric in column 1.
+ Detail: Returned type integer does not match expected type numeric in column "ax" (position 1).
 (2 rows)
 
 drop function f1();
@@ -1362,10 +1362,10 @@ begin
 end;
 $$ language plpgsql;
 select * from plpgsql_check_function('f1()', performance_warnings := true);
-                              plpgsql_check_function                               
------------------------------------------------------------------------------------
+                                     plpgsql_check_function                                     
+------------------------------------------------------------------------------------------------
  error:42804:3:RETURN QUERY:structure of query does not match function result type
- Detail: Returned type numeric does not match expected type integer in column 1.
+ Detail: Returned type numeric does not match expected type integer in column "a" (position 1).
 (2 rows)
 
 drop function f1();
@@ -1374,10 +1374,10 @@ returns setof numeric as $$
 begin return query select a;
 end $$ language plpgsql;
 select * from plpgsql_check_function('f1(int)', performance_warnings := true);
-                              plpgsql_check_function                               
------------------------------------------------------------------------------------
+                                         plpgsql_check_function                                          
+---------------------------------------------------------------------------------------------------------
  error:42804:2:RETURN QUERY:structure of query does not match function result type
- Detail: Returned type integer does not match expected type numeric in column 1.
+ Detail: Returned type integer does not match expected type numeric in column "__result__" (position 1).
 (2 rows)
 
 drop function f1(int);
@@ -1556,10 +1556,10 @@ begin
 end;
 $$ language plpgsql;
 select * from plpgsql_check_function('fx()', performance_warnings := true);
-                             plpgsql_check_function                              
----------------------------------------------------------------------------------
+                                     plpgsql_check_function                                     
+------------------------------------------------------------------------------------------------
  error:42804:4:RETURN:returned record type does not match expected record type
- Detail: Returned type integer does not match expected type numeric in column 2.
+ Detail: Returned type integer does not match expected type numeric in column "b" (position 2).
 (2 rows)
 
 create or replace function fx()
@@ -1586,10 +1586,10 @@ begin
 end;
 $$ language plpgsql;
 select * from plpgsql_check_function('fx()', performance_warnings := true);
-                             plpgsql_check_function                              
----------------------------------------------------------------------------------
+                                     plpgsql_check_function                                     
+------------------------------------------------------------------------------------------------
  error:42804:4:RETURN NEXT:wrong record type supplied in RETURN NEXT
- Detail: Returned type integer does not match expected type numeric in column 2.
+ Detail: Returned type integer does not match expected type numeric in column "b" (position 2).
 (2 rows)
 
 create or replace function fx()
@@ -2303,7 +2303,7 @@ select * from plpgsql_check_function('fx()', performance_warnings := true, fatal
                 plpgsql_check_function                 
 -------------------------------------------------------
  error:42703:6:RAISE:record "r" has no field "a"
- Context: SQL expression "r.a"
+ Context: PL/pgSQL expression "r.a"
  warning extra:00000:5:DECLARE:never read variable "r"
 (3 rows)
 
@@ -2447,7 +2447,7 @@ select * from plpgsql_check_function('fx(int)', performance_warnings := true, fa
                                  plpgsql_check_function                                  
 -----------------------------------------------------------------------------------------
  error:42703:12:RETURN NEXT:record "r" has no field "x"
- Context: SQL expression "r.x"
+ Context: PL/pgSQL expression "r.x"
  warning extra:00000:4:DECLARE:never read variable "r"
  performance:00000:routine is marked as VOLATILE, should be STABLE
  Hint: When you fix this issue, please, recheck other functions that uses this function.
@@ -3141,7 +3141,8 @@ end;
 $$ language plpgsql;
 -- should to fail
 select testseq();
-ERROR:  "test_table" is not a sequence
+ERROR:  cannot open relation "test_table"
+DETAIL:  This operation is not supported for tables.
 CONTEXT:  SQL statement "SELECT nextval('test_table')"
 PL/pgSQL function testseq() line 3 at PERFORM
 select * from plpgsql_check_function('testseq()', fatal_errors := false);
@@ -3732,12 +3733,12 @@ end;
 $$ language plpgsql;
 -- should not to crash
 select * from plpgsql_check_function('test_crash', fatal_errors := false);
-                                         plpgsql_check_function                                          
----------------------------------------------------------------------------------------------------------
+                            plpgsql_check_function                            
+------------------------------------------------------------------------------
  error:42883:4:statement block:function buggyfunc(integer) does not exist
  Query: buggyfunc(10)
  --     ^
- Hint: No function matches the given name and argument types. You might need to add explicit type casts.
+ Detail: There is no function of that name.
  Context: during statement block local variable "ec" initialization on line 3
  error:42P01:5:SQL statement:relation "buggytab" does not exist
  Query: select *         from buggytab
@@ -3746,12 +3747,12 @@ select * from plpgsql_check_function('test_crash', fatal_errors := false);
 (9 rows)
 
 select * from plpgsql_check_function('test_crash', fatal_errors := true);
-                                         plpgsql_check_function                                          
----------------------------------------------------------------------------------------------------------
+                            plpgsql_check_function                            
+------------------------------------------------------------------------------
  error:42883:4:statement block:function buggyfunc(integer) does not exist
  Query: buggyfunc(10)
  --     ^
- Hint: No function matches the given name and argument types. You might need to add explicit type casts.
+ Detail: There is no function of that name.
  Context: during statement block local variable "ec" initialization on line 3
 (5 rows)
 
@@ -3806,7 +3807,7 @@ select * from plpgsql_check_function('fx()');
                 plpgsql_check_function                
 ------------------------------------------------------
  error:42703:5:RAISE:record "var" has no field "hint"
- Context: SQL expression "var.hint"
+ Context: PL/pgSQL expression "var.hint"
 (2 rows)
 
 drop function fx();
@@ -4047,7 +4048,7 @@ select * from plpgsql_check_function('dyn_sql_3');
              plpgsql_check_function              
 -------------------------------------------------
  error:42703:6:RAISE:record "r" has no field "c"
- Context: SQL expression "r.c"
+ Context: PL/pgSQL expression "r.c"
 (2 rows)
 
 drop function dyn_sql_3();
@@ -7644,10 +7645,10 @@ begin
 end;
 $$ language plpgsql;
 select * from plpgsql_check_function('f1()', performance_warnings => true);
-                               plpgsql_check_function                               
-------------------------------------------------------------------------------------
+                                     plpgsql_check_function                                     
+------------------------------------------------------------------------------------------------
  error:42804:3:RETURN NEXT:returned record type does not match expected record type
- Detail: Returned type numeric does not match expected type integer in column 1.
+ Detail: Returned type numeric does not match expected type integer in column "a" (position 1).
 (2 rows)
 
 create or replace function f1()
@@ -7674,10 +7675,10 @@ begin
 end;
 $$ language plpgsql;
 select * from plpgsql_check_function('f1()', performance_warnings => true);
-                               plpgsql_check_function                               
-------------------------------------------------------------------------------------
+                                     plpgsql_check_function                                     
+------------------------------------------------------------------------------------------------
  error:42804:4:RETURN NEXT:returned record type does not match expected record type
- Detail: Returned type numeric does not match expected type integer in column 1.
+ Detail: Returned type numeric does not match expected type integer in column "a" (position 1).
 (2 rows)
 
 drop function f1();
@@ -8130,7 +8131,7 @@ select * from plpgsql_check_function('test_function');
 ----------------------------------------------------------------------------
  error:55000:4:RAISE:record "r" is not assigned yet
  Detail: The tuple structure of a not-yet-assigned record is indeterminate.
- Context: SQL expression "r.a"
+ Context: PL/pgSQL expression "r.a"
 (3 rows)
 
 create type ctype as (a int, b int);
@@ -8191,7 +8192,7 @@ WARNING:  Pragma "type" on line 4 is not processed.
 ----------------------------------------------------------------------------
  error:55000:5:RAISE:record "r" is not assigned yet
  Detail: The tuple structure of a not-yet-assigned record is indeterminate.
- Context: SQL expression "r.a"
+ Context: PL/pgSQL expression "r.a"
 (3 rows)
 
 create or replace function test_function()
@@ -8209,7 +8210,7 @@ WARNING:  Pragma "type" on line 4 is not processed.
 ----------------------------------------------------------------------------
  error:55000:5:RAISE:record "r" is not assigned yet
  Detail: The tuple structure of a not-yet-assigned record is indeterminate.
- Context: SQL expression "r.a"
+ Context: PL/pgSQL expression "r.a"
 (3 rows)
 
 drop function test_function();
@@ -8599,16 +8600,17 @@ end;
 $$ language plpgsql;
 -- only b should be marked as unused variable
 select * from plpgsql_check_function('test_function', fatal_errors := false);
-                                         plpgsql_check_function                                          
----------------------------------------------------------------------------------------------------------
+                        plpgsql_check_function                         
+-----------------------------------------------------------------------
  error:42883:6:assignment:operator does not exist: integer + character
  Query: c := a + d
  --            ^
- Hint: No operator matches the given name and argument types. You might need to add explicit type casts.
+ Detail: No operator of that name accepts the given argument types.
+ Hint: You might need to add explicit type casts.
  Context: at assignment to variable "c" declared on line 4
  warning:00000:3:DECLARE:unused variable "b"
  warning extra:00000:4:DECLARE:never read variable "c"
-(7 rows)
+(8 rows)
 
 drop function test_function();
 -- from plpgsql_check_active-12
@@ -8778,7 +8780,7 @@ select * from plpgsql_check_function('test_pragma');
              plpgsql_check_function              
 -------------------------------------------------
  error:42703:9:RAISE:record "r" has no field "x"
- Context: SQL expression "r.x"
+ Context: PL/pgSQL expression "r.x"
 (2 rows)
 
 create or replace function test_pragma()
@@ -8801,7 +8803,7 @@ select * from plpgsql_check_function('test_pragma');
               plpgsql_check_function              
 --------------------------------------------------
  error:42703:11:RAISE:record "r" has no field "x"
- Context: SQL expression "r.x"
+ Context: PL/pgSQL expression "r.x"
 (2 rows)
 
 drop function test_pragma();
