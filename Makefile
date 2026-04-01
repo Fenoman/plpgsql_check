@@ -52,8 +52,13 @@ PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 endif
 
+# Work around GCC LTO ICEs seen during PGXS shared library links on some toolchains.
+override CFLAGS := $(filter-out -flto=% -flto -ffat-lto-objects,$(CFLAGS))
+override LDFLAGS := $(filter-out -flto=% -flto -ffat-lto-objects,$(LDFLAGS))
+
 # temorary fix of compilation with gcc 15
-override CFLAGS += -Wno-error=incompatible-pointer-types -I$(top_builddir)/src/pl/plpgsql/src -Wall -g
+override CFLAGS += -fno-lto -Wno-error=incompatible-pointer-types -I$(top_builddir)/src/pl/plpgsql/src -Wall -g
+override LDFLAGS += -fno-lto
 
 plpgsql_check.typedefs: $(OBJS)
 	./typedefs_gen.py
