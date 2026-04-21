@@ -29,6 +29,16 @@
 
 #include <math.h>
 
+static inline TransactionId
+plch_heap_tuple_get_raw_xmin(HeapTuple tuple)
+{
+#ifdef HeapTupleGetRawXmin
+	return HeapTupleGetRawXmin(tuple);
+#else
+	return HeapTupleHeaderGetRawXmin(tuple->t_data);
+#endif
+}
+
 /*
  * Any instance of plpgsql function will have a own profile.
  * When function will be dropped, then related profile should
@@ -952,7 +962,7 @@ plpgsql_profiler_reset(PG_FUNCTION_ARGS)
 	memset(&hk, 0, sizeof(profiler_hashkey));
 	hk.fn_oid = funcoid;
 	hk.db_oid = MyDatabaseId;
-	hk.fn_xmin = HeapTupleGetRawXmin(procTuple);
+	hk.fn_xmin = plch_heap_tuple_get_raw_xmin(procTuple);
 	hk.fn_tid = procTuple->t_self;
 	hk.chunk_num = 1;
 
@@ -1853,7 +1863,7 @@ plpgsql_check_iterate_over_profile(plpgsql_check_info *cinfo,
 	memset(&pi, 0, sizeof(profiler_iterator));
 	pi.key.fn_oid = cinfo->fn_oid;
 	pi.key.db_oid = MyDatabaseId;
-	pi.key.fn_xmin = HeapTupleGetRawXmin(cinfo->proctuple);
+	pi.key.fn_xmin = plch_heap_tuple_get_raw_xmin(cinfo->proctuple);
 	pi.key.fn_tid = cinfo->proctuple->t_self;
 	pi.key.chunk_num = 1;
 	pi.ri = ri;
@@ -1946,7 +1956,7 @@ plpgsql_check_profiler_show_profile(plpgsql_check_result_info *ri,
 	memset(&hk, 0, sizeof(profiler_hashkey));
 	hk.fn_oid = cinfo->fn_oid;
 	hk.db_oid = MyDatabaseId;
-	hk.fn_xmin = HeapTupleGetRawXmin(cinfo->proctuple);
+	hk.fn_xmin = plch_heap_tuple_get_raw_xmin(cinfo->proctuple);
 	hk.fn_tid = cinfo->proctuple->t_self;
 	hk.chunk_num = 1;
 
