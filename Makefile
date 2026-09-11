@@ -11,6 +11,11 @@ endif
 
 REGRESS_OPTS = --dbname=$(PL_TESTDB)
 
+# This fork ships plpgsql_check.disable_dynamic_sql_check enabled by default,
+# while the regression suite covers the dynamic SQL checks it turns off. Clear
+# the option for the test run only - the runtime default stays untouched.
+export PGOPTIONS := $(PGOPTIONS) -c plpgsql_check.disable_dynamic_sql_check=off
+
 # plpgsql_check_nocrash should be exuted with and without
 # preloaded plpgsql_check, but it is not possible enforce
 # from this makefile - installcheck doesn't support alter
