@@ -11,6 +11,11 @@ endif
 
 REGRESS_OPTS = --dbname=$(PL_TESTDB)
 
+# This fork ships plpgsql_check.disable_dynamic_sql_check enabled by default,
+# while the regression suite covers the dynamic SQL checks it turns off. Clear
+# the option for the test run only - the runtime default stays untouched.
+export PGOPTIONS := $(PGOPTIONS) -c plpgsql_check.disable_dynamic_sql_check=off
+
 REGRESS = plpgsql_check_passive\
 		plpgsql_check_active\
 		plpgsql_check_active-$(MAJORVERSION)\
