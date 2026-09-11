@@ -34,6 +34,20 @@
 #include <math.h>
 
 /*
+ * Tantor SE renamed the raw xmin accessor, community PostgreSQL keeps
+ * HeapTupleHeaderGetRawXmin. Hide the difference behind one helper.
+ */
+static inline TransactionId
+plch_heap_tuple_get_raw_xmin(HeapTuple tuple)
+{
+#ifdef HeapTupleGetRawXmin
+	return HeapTupleGetRawXmin(tuple);
+#else
+	return HeapTupleHeaderGetRawXmin(tuple->t_data);
+#endif
+}
+
+/*
  * It is unique for function with same oid. For function statistic
  * We don't want to have multiple stats per every update of any
  * function.
@@ -706,7 +720,7 @@ proctuple_init_function_identity_hashkey(plch_fidentity_hk *hk, HeapTuple procTu
 	hk->db_oid = MyDatabaseId;
 	hk->fn_oid = proc->oid;
 
-	hk->fn_xmin = HeapTupleHeaderGetRawXmin(procTuple->t_data);
+	hk->fn_xmin = plch_heap_tuple_get_raw_xmin(procTuple);
 	hk->fn_tid = procTuple->t_self;
 
 }
