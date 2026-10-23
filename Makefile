@@ -65,6 +65,10 @@ override LDFLAGS := $(filter-out -flto=% -flto -ffat-lto-objects,$(LDFLAGS))
 override CFLAGS += -fno-lto -Wno-error=incompatible-pointer-types -I$(top_builddir)/src/pl/plpgsql/src -Wall -g
 override LDFLAGS += -fno-lto
 
+# A call to an undeclared function still links and fails only when the server
+# loads the library with "undefined symbol". Make it a build error.
+override CFLAGS += -Werror=implicit-function-declaration
+
 plpgsql_check.typedefs: $(OBJS)
 	./typedefs_gen.py
 

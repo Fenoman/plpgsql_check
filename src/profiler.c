@@ -34,13 +34,18 @@
 #include <math.h>
 
 /*
- * Tantor SE renamed the raw xmin accessor, community PostgreSQL keeps
- * HeapTupleHeaderGetRawXmin. Hide the difference behind one helper.
+ * Tantor uses 64-bit xids and keeps the raw xmin in HeapTupleData, where
+ * HeapTupleGetRawXmin() reads it. Community PostgreSQL reads it from the
+ * tuple header with HeapTupleHeaderGetRawXmin(). Tantor 17 defines the
+ * accessor as a macro and Tantor 18 as a static inline function, so the
+ * macro test alone misses Tantor 18. TANTOR_VERSION comes from pg_config.h
+ * and is set by every Tantor edition, unlike the -DTANTOR_SE and
+ * -DTANTOR_SE1C edition flags.
  */
 static inline TransactionId
 plch_heap_tuple_get_raw_xmin(HeapTuple tuple)
 {
-#ifdef HeapTupleGetRawXmin
+#if defined(HeapTupleGetRawXmin) || defined(TANTOR_VERSION)
 	return HeapTupleGetRawXmin(tuple);
 #else
 	return HeapTupleHeaderGetRawXmin(tuple->t_data);
