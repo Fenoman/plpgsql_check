@@ -34,6 +34,38 @@
 #include <math.h>
 
 /*
+ * Raw xmin of a pg_proc tuple, part of the profiler hash key.
+ *
+ * Why. Servers with 64-bit xids keep the raw xmin in HeapTupleData and read
+ * it with HeapTupleGetRawXmin(). Community PostgreSQL and PostgresPro
+ * Standard read it from the tuple header with HeapTupleHeaderGetRawXmin().
+ * A static inline accessor is invisible to the preprocessor, so the server
+ * is recognized by the macros below.
+ *
+ * How the server is detected:
+ *
+ *   HeapTupleGetRawXmin  a macro in Tantor SE 1C 17
+ *   TANTOR_VERSION       pg_config.h of every Tantor edition, unlike the
+ *                        -DTANTOR_SE and -DTANTOR_SE1C edition flags
+ *   PGPRO_EE             pg_config.h of PostgresPro Enterprise. Standard
+ *                        defines only PGPRO_STD, and Enterprise defines both
+ *
+ * What it misses. Another server with 64-bit xids and a static inline
+ * accessor takes the community branch. The Makefile builds with
+ * -Werror=implicit-function-declaration, so that build stops instead of
+ * producing a library the server refuses to load.
+ */
+static inline TransactionId
+plch_heap_tuple_get_raw_xmin(HeapTuple tuple)
+{
+#if defined(HeapTupleGetRawXmin) || defined(TANTOR_VERSION) || defined(PGPRO_EE)
+	return HeapTupleGetRawXmin(tuple);
+#else
+	return HeapTupleHeaderGetRawXmin(tuple->t_data);
+#endif
+}
+
+/*
  * It is unique for function with same oid. For function statistic
  * We don't want to have multiple stats per every update of any
  * function.
@@ -746,7 +778,7 @@ proctuple_init_function_identity_hashkey(plch_fidentity_hk *hk, HeapTuple procTu
 	hk->db_oid = MyDatabaseId;
 	hk->fn_oid = proc->oid;
 
-	hk->fn_xmin = HeapTupleHeaderGetRawXmin(procTuple->t_data);
+	hk->fn_xmin = plch_heap_tuple_get_raw_xmin(procTuple);
 	hk->fn_tid = procTuple->t_self;
 
 }

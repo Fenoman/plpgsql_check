@@ -1328,4 +1328,16 @@ select exec_stmts, exec_stmts_err, raised_errors, source from plpgsql_profiler_f
 select exec_stmts, exec_stmts_err, raised_errors, source from plpgsql_profiler_function_tb('fx_inner');
 select exec_stmts, exec_stmts_err, raised_errors, source from plpgsql_profiler_function_tb('fx_outer()'::regprocedure);
 
+-- The binary array includes the element type supplied by the profiler.
+copy (
+  select pg_typeof(raised_errors), array_send(raised_errors) = array_send(array[1::bigint])
+  from plpgsql_profiler_function_tb('fx_inner()'::regprocedure)
+  where source like '%raise exception%'
+) to stdout;
+copy (
+  select pg_typeof(raised_errors), array_send(raised_errors) = array_send(array[1::bigint])
+  from plpgsql_profiler_function_tb('fx_inner'::text)
+  where source like '%raise exception%'
+) to stdout;
+
 set plpgsql_check.profiler to off;

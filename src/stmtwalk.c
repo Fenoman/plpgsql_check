@@ -2222,9 +2222,11 @@ check_dynamic_sql(PLpgSQL_checkstate *cstate,
 	 * When fatal_errors is off, then an exception can be handled inside
 	 * plpgsql_check_expr, and then we have to check if expr has a valid plan
 	 * or not. We can continue in an analyze only when all plans of all
-	 * related expression are valid.
+	 * related expression are valid. When dynamic SQL checks are disabled,
+	 * we still check the command expression and its USING arguments above.
 	 */
-	if (no_valid_plan(cstate, query) || !params_are_valid)
+	if (plpgsql_check_disable_dynamic_sql_check ||
+		no_valid_plan(cstate, query) || !params_are_valid)
 	{
 		cstate->found_unknown_query = true;
 
