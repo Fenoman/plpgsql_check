@@ -11,6 +11,11 @@ endif
 
 REGRESS_OPTS = --dbname=$(PL_TESTDB)
 
+# This fork ships plpgsql_check.disable_dynamic_sql_check enabled by default,
+# while the regression suite covers the dynamic SQL checks it turns off. Clear
+# the option for the test run only - the runtime default stays untouched.
+export PGOPTIONS := $(PGOPTIONS) -c plpgsql_check.disable_dynamic_sql_check=off
+
 # Run plpgsql_check_nocrash with and without shared preloading. installcheck
 # does not restart its target server, so these configurations must be started
 # separately.
@@ -53,8 +58,17 @@ PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 endif
 
+# Work around GCC LTO ICEs seen during PGXS shared library links on some toolchains.
+override CFLAGS := $(filter-out -flto=% -flto -ffat-lto-objects,$(CFLAGS))
+override LDFLAGS := $(filter-out -flto=% -flto -ffat-lto-objects,$(LDFLAGS))
+
 # temporary fix of compilation with gcc 15
-override CFLAGS += -Wno-error=incompatible-pointer-types -I$(top_builddir)/src/pl/plpgsql/src -Wall -g
+override CFLAGS += -fno-lto -Wno-error=incompatible-pointer-types -I$(top_builddir)/src/pl/plpgsql/src -Wall -g
+override LDFLAGS += -fno-lto
+
+# A call to an undeclared function still links and fails only when the server
+# loads the library with "undefined symbol". Make it a build error.
+override CFLAGS += -Werror=implicit-function-declaration
 
 plpgsql_check.typedefs: $(OBJS)
 	./typedefs_gen.py
